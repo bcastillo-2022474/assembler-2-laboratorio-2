@@ -12,12 +12,13 @@ int main() {
     cin >> opcion;
 
     switch (opcion) {
-        case 1:
+        case 1: {
             cout << "Ingrese el lado: ";
             double lado;
             cin >> lado;
             cout << "Area: " << lado * lado << endl;
             break;
+        }
 
         case 2: {
             int n;
@@ -38,6 +39,6 @@ int main() {
             cout << "Opcion invalida" << endl;
     }
 
-    cout << "Fin del programa" << endl
+    cout << "Fin del programa" << endl;
     return 0;
 }

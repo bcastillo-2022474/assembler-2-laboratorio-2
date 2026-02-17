@@ -1,11 +1,12 @@
 #include <iostream>
 #include <string>
+#include <iomanip>
 using namespace std;
 
 int pedirEntero(const string& msg) {
     int x;
     cout << msg;
-    cin >> x
+    cin >> x;
     return x;
 }
 
@@ -18,8 +19,8 @@ int main() {
         suma += nota;
     }
 
-    double promedio = suma / n;
+    double promedio = (double)suma / n;
     cout << "Promedio: " << fixed << setprecision(2) << promedio << endl;
 
-    return 0
+    return 0;
 }

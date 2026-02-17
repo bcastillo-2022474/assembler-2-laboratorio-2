@@ -15,7 +15,7 @@ int main() {
         suma += x;
     }
 
-    double promedio = suma / n;
+    double promedio = (double)suma / n;
 
     cout << fixed << setprecision(2);
     cout << "Promedio: " << promedio << endl;

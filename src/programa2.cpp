@@ -1,7 +1,7 @@
 #include <iostream>
 using namespace std;
 
-void intercambiar(int a, int b) {
+void intercambiar(int& a, int& b) {
     int tmp = a;
     a = b;
     b = tmp;

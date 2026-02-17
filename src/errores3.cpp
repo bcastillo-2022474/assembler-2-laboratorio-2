@@ -7,12 +7,12 @@ int main() {
     cout << "Ingrese n (1..20): ";
     cin >> n;
 
-    const int limite;
+    const int limite = n;
     if (n > 20) n = 20;
 
     vector<int> valores(limite);
 
-    for (int i = 0; i <= limite; i++) {
+    for (int i = 0; i < limite; i++) {
         valores[i] = i * i;
     }
 
