@@ -1,68 +1,77 @@
-// Calculadora de calificaciones estudiantiles
-// NOTA: Este archivo contiene 5 errores intencionales para el ejercicio 5.
+// Calculadora de puntos para torneo de videojuego
+// NOTA: Contiene 5 errores relacionados con quirks y sintaxis de C++
 #include <iostream>
 #include <string>
-// ERROR 1: Falta #include <iomanip> necesario para fixed y setprecision
-
 using namespace std;
 
 int main() {
-    const int MAX_NOTAS = 5;
-    const double NOTA_MINIMA = 61.0;
+    const int PUNTAJE_BASE = 100;
+    string jugador;
 
-    string nombre;
-    cout << "Nombre del estudiante: ";
-    getline(cin, nombre);
+    cout << "Nombre del jugador: ";
+    cin >> jugador;
 
-    double suma = 0.0;
-    int i = 0;
+    // --- ERROR 1: unsigned int underflow ---
+    // Si penalizacion > vidas, la resta produce wrapping: vidas pasa a ~4,000,000,000
+    // porque unsigned no puede representar negativos, simplemente da la vuelta.
+    unsigned int vidas = 3;
+    int penalizacion;
+    cout << "Ingrese penalizacion de vidas: ";
+    cin >> penalizacion;
+    vidas -= penalizacion;
+    cout << "Vidas restantes: " << vidas << endl;
 
-    while (i < MAX_NOTAS) {
-        double nota;
-        cout << "Ingrese nota " << (i + 1) << " (0-100): ";
-        cin >> nota;
+    // --- ERROR 2: Dangling else ---
+    // La indentacion sugiere que el else corresponde al if (vidas > 0),
+    // pero en C++ el else siempre se asocia al if mas cercano (if puntos > 50).
+    // Si vidas == 0, no se imprime absolutamente nada.
+    int puntos = PUNTAJE_BASE;
+    if (vidas > 0)
+        if (puntos > 50)
+            cout << jugador << " avanza al siguiente nivel." << endl;
+        else
+            cout << "Puntos insuficientes." << endl;
 
-        // ERROR 2: Condicion usa asignacion (=) en lugar de comparacion (>=)
-        if (nota = 0 && nota <= 100) {
-            suma += nota;
-        } else {
-            cout << "Nota invalida, se usara 0." << endl;
-        }
-        i++;
+    // --- ERROR 3: Switch fallthrough ---
+    // Falta break en case 1: si rango es 1, imprime "Plata" y luego cae
+    // directo al case 0 imprimiendo "Bronce" tambien.
+    int rango = puntos / 50;
+    switch (rango) {
+        case 2:
+            cout << "Rango: Oro" << endl;
+            break;
+        case 1:
+            cout << "Rango: Plata" << endl;
+            // falta break aqui
+        case 0:
+            cout << "Rango: Bronce" << endl;
+            break;
+        default:
+            cout << "Rango: Sin clasificar" << endl;
     }
 
-    // ERROR 3: Division entera: suma es double pero MAX_NOTAS es int,
-    // sin embargo se convierte a int antes de dividir perdiendo decimales
-    int sumaEntera = (int)suma;
-    double promedio = sumaEntera / MAX_NOTAS;
+    // --- ERROR 4: Variable shadowing ---
+    // Se declara un nuevo 'bonus' (int) dentro del bloque que oculta al exterior (double).
+    // Las operaciones dentro del bloque modifican la copia interior, nunca la exterior.
+    double bonus = 20.0;
+    {
+        int bonus = 5;
+        bonus += 10;    // modifica la interior (5 -> 15), la de afuera sigue en 20.0
+        cout << "Bonus aplicado: " << bonus << endl;
+    }
+    cout << "Bonus final del jugador: " << bonus << endl;  // imprime 20, no 15
 
-    cout << fixed << setprecision(2);  // necesita <iomanip>
-    cout << "\nEstudiante: " << nombre << endl;
-    cout << "Promedio: " << promedio << endl;
-
-    // ERROR 4: Logica invertida en la condicion de aprobacion
-    if (promedio < NOTA_MINIMA) {
-        cout << "Estado: APROBADO" << endl;
+    // --- ERROR 5: Comparacion signed/unsigned ---
+    // jugador.size() retorna size_t (unsigned). Al comparar con un int negativo,
+    // C++ convierte el int a unsigned: -1 se vuelve ~18 quintillones.
+    // La condicion (enorme_numero < 6) es false, aunque -1 < 6 parece obvio.
+    int intentos = 0;
+    intentos--;  // intentos = -1
+    if (intentos < jugador.size()) {
+        cout << "Acceso permitido para: " << jugador << endl;
     } else {
-        cout << "Estado: REPROBADO" << endl;
+        cout << "Acceso denegado." << endl;  // se ejecuta esto, inesperadamente
     }
-
-    // ERROR 5: El ciclo imprime un rango incorrecto (empieza en 1 deberia ser 0,
-    // y usa <= MAX_NOTAS accediendo un elemento fuera del rango logico)
-    cout << "\nNotas posibles del 1 al " << MAX_NOTAS << ":" << endl;
-    for (int j = 1; j <= MAX_NOTAS + 1; j++) {
-        cout << "  Nota #" << j << endl;
-    }
-
-    // Conversion de promedio a entero para mostrar categoria
-    char categoria;
-    if (promedio >= 90.0)      categoria = 'A';
-    else if (promedio >= 80.0) categoria = 'B';
-    else if (promedio >= 70.0) categoria = 'C';
-    else if (promedio >= 61.0) categoria = 'D';
-    else                       categoria = 'F';
-
-    cout << "Categoria: " << categoria << endl;
 
     return 0;
 }

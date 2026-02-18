@@ -136,51 +136,58 @@ El programa es una **calculadora de calificaciones estudiantiles** que:
 - Usa constantes (`const`) para el número de notas y la nota mínima
 - Usa conversión de tipos (`(int)`)
 
+### Descripción del programa
+
+**Calculadora de puntos para torneo de videojuego.** Lee el nombre del jugador, aplica una penalización de vidas, determina su rango y calcula un bonus. Los 5 errores son **quirks y trampas reales del lenguaje C++**, todos compilan sin errores (solo warnings en algunos casos).
+
 ### Conceptos incluidos
 
 | Concepto | Implementación |
 |---|---|
-| Conversión/casteo de tipos | `(int)suma` para convertir double a int |
-| Estructuras condicionales | `if/else` para validar notas, determinar aprobación y categoría |
-| Ciclos | `while` para leer las notas, `for` para imprimir lista de notas |
-| Constantes | `const int MAX_NOTAS = 5` y `const double NOTA_MINIMA = 61.0` |
-| Diferentes tipos de datos | `string`, `double`, `int`, `char` |
+| Conversión/casteo de tipos | `static_cast<int>(jugador.size())` para comparación segura signed/unsigned |
+| Estructuras condicionales | `if/else` para nivel y acceso; `switch` para rango |
+| Ciclos | `switch` con fallthrough como trampa; lógica iterativa implícita |
+| Constantes | `const int PUNTAJE_BASE = 100` |
+| Diferentes tipos de datos | `string`, `unsigned int`, `int`, `double` |
 
 ### Los 5 errores intencionales
 
 | # | Línea | Tipo de error | Descripción | Corrección |
 |---|---|---|---|---|
-| 1 | 4 (falta include) | **Sintaxis / include** | Falta `#include <iomanip>` necesario para `fixed` y `setprecision`. El programa no compilará. | Agregar `#include <iomanip>` |
-| 2 | 26 | **Lógica / operador** | `if (nota = 0 && ...)` usa el operador de asignación `=` en lugar del de comparación `>=`. La condición siempre evalúa el resultado de la asignación (0, que es `false`), por lo que nunca se acumula ninguna nota. | Cambiar `nota = 0` por `nota >= 0` |
-| 3 | 37-38 | **Tipo de dato / división entera** | `int sumaEntera = (int)suma` trunca los decimales de la suma, y luego `sumaEntera / MAX_NOTAS` hace división entera, perdiendo precisión en el promedio. | Eliminar la conversión; usar `double promedio = suma / MAX_NOTAS;` directamente |
-| 4 | 43-47 | **Lógica invertida** | La condición de aprobación está al revés: entra al bloque `"APROBADO"` cuando `promedio < NOTA_MINIMA` y muestra `"REPROBADO"` cuando sí aprobó. | Cambiar `<` por `>=` en la condición `if (promedio < NOTA_MINIMA)` |
-| 5 | 51 | **Lógica / fuera de rango** | El ciclo `for` usa `j <= MAX_NOTAS + 1`, iterando 6 veces en lugar de 5, imprimiendo una nota extra (`Nota #6`) que no existe. | Cambiar a `j <= MAX_NOTAS` |
+| 1 | ~20 | **Quirk: `unsigned int` underflow** | `unsigned int vidas = 3; vidas -= penalizacion;` Si `penalizacion > 3`, el resultado en unsigned no puede ser negativo y hace *wrapping*: pasa a ~4,294,967,293 en lugar de un número negativo. | Cambiar `unsigned int` a `int` |
+| 2 | ~28-32 | **Quirk sintáctico: Dangling `else`** | La indentación sugiere que el `else` pertenece al `if (vidas > 0)`, pero C++ siempre asocia el `else` al `if` más cercano (`if (puntos > 50)`). Si `vidas == 0`, no se imprime nada. El compilador incluso emite `-Wdangling-else`. | Encerrar el cuerpo del `if (vidas > 0)` con `{ }` |
+| 3 | ~36-45 | **Quirk: Switch fallthrough** | Falta `break` en `case 1`. Si `rango == 1`, el programa imprime `"Rango: Plata"` y cae directamente al `case 0` imprimiendo también `"Rango: Bronce"`. Esto es comportamiento definido en C++, no un error de compilación. | Agregar `break;` al final de `case 1` |
+| 4 | ~48-56 | **Quirk: Variable shadowing** | Dentro del bloque `{ }` se declara `int bonus = 5;` que **oculta** la variable exterior `double bonus = 20.0`. Las operaciones dentro del bloque modifican la copia interior; la exterior nunca cambia. | Eliminar la redeclaración; operar directamente sobre `bonus` exterior |
+| 5 | ~59-65 | **Quirk: Comparación signed/unsigned** | `jugador.size()` retorna `size_t` (tipo unsigned). Al comparar con `intentos` (que es `-1`), C++ convierte el `-1` a `size_t`: se vuelve ~18 quintillones. La condición `(enorme > tamaño_real)` resulta `false`, bloqueando el acceso aunque `-1 < 6` parece obvio. | Castear `jugador.size()` a `int`: `static_cast<int>(jugador.size())` |
 
 ### Diff mi_programa.cpp → mi_programa_corregido.cpp
 
 ```diff
-+#include <iomanip>
+-    unsigned int vidas = 3;
++    int vidas = 3;
 
--        if (nota = 0 && nota <= 100) {
-+        if (nota >= 0 && nota <= 100) {
-
--    int sumaEntera = (int)suma;
--    double promedio = sumaEntera / MAX_NOTAS;
-+    double promedio = suma / MAX_NOTAS;
-
--    if (promedio < NOTA_MINIMA) {
--        cout << "Estado: APROBADO" << endl;
--    } else {
--        cout << "Estado: REPROBADO" << endl;
--    }
-+    if (promedio >= NOTA_MINIMA) {
-+        cout << "Estado: APROBADO" << endl;
-+    } else {
-+        cout << "Estado: REPROBADO" << endl;
+-    if (vidas > 0)
+-        if (puntos > 50)
+-            cout << jugador << " avanza al siguiente nivel." << endl;
+-        else
+-            cout << "Puntos insuficientes." << endl;
++    if (vidas > 0) {
++        if (puntos > 50)
++            cout << jugador << " avanza al siguiente nivel." << endl;
++        else
++            cout << "Puntos insuficientes." << endl;
 +    }
 
--    for (int j = 1; j <= MAX_NOTAS + 1; j++) {
-+    for (int j = 1; j <= MAX_NOTAS; j++) {
+         case 1:
+             cout << "Rango: Plata" << endl;
++            break;   // break agregado
+
+-        int bonus = 5;
+-        bonus += 10;
++        bonus += 10;   // opera sobre la variable exterior directamente
+
+-    if (intentos < jugador.size()) {
++    if (intentos < static_cast<int>(jugador.size())) {
 ```
 
 ---

@@ -1,64 +1,68 @@
-// Calculadora de calificaciones estudiantiles - VERSION CORREGIDA
+// Calculadora de puntos para torneo de videojuego — VERSION CORREGIDA
 #include <iostream>
 #include <string>
-#include <iomanip>  // CORRECCION 1: Se agrega include necesario para fixed y setprecision
-
 using namespace std;
 
 int main() {
-    const int MAX_NOTAS = 5;
-    const double NOTA_MINIMA = 61.0;
+    const int PUNTAJE_BASE = 100;
+    string jugador;
 
-    string nombre;
-    cout << "Nombre del estudiante: ";
-    getline(cin, nombre);
+    cout << "Nombre del jugador: ";
+    cin >> jugador;
 
-    double suma = 0.0;
-    int i = 0;
+    // CORRECCION 1: Usar int en lugar de unsigned int para permitir valores negativos
+    // sin riesgo de wrapping aritmetico.
+    int vidas = 3;
+    int penalizacion;
+    cout << "Ingrese penalizacion de vidas: ";
+    cin >> penalizacion;
+    vidas -= penalizacion;
+    cout << "Vidas restantes: " << vidas << endl;
 
-    while (i < MAX_NOTAS) {
-        double nota;
-        cout << "Ingrese nota " << (i + 1) << " (0-100): ";
-        cin >> nota;
-
-        // CORRECCION 2: Se usa >= en lugar de = para comparar correctamente
-        if (nota >= 0 && nota <= 100) {
-            suma += nota;
-        } else {
-            cout << "Nota invalida, se usara 0." << endl;
-        }
-        i++;
+    // CORRECCION 2: Agregar llaves al cuerpo del if exterior para que el else
+    // quede correctamente encerrado y no haya ambiguedad de a quien pertenece.
+    int puntos = PUNTAJE_BASE;
+    if (vidas > 0) {
+        if (puntos > 50)
+            cout << jugador << " avanza al siguiente nivel." << endl;
+        else
+            cout << "Puntos insuficientes." << endl;
     }
 
-    // CORRECCION 3: Se elimina la conversion a int para preservar los decimales
-    double promedio = suma / MAX_NOTAS;
+    // CORRECCION 3: Agregar break faltante en case 1 para evitar el fallthrough.
+    int rango = puntos / 50;
+    switch (rango) {
+        case 2:
+            cout << "Rango: Oro" << endl;
+            break;
+        case 1:
+            cout << "Rango: Plata" << endl;
+            break;  // break agregado
+        case 0:
+            cout << "Rango: Bronce" << endl;
+            break;
+        default:
+            cout << "Rango: Sin clasificar" << endl;
+    }
 
-    cout << fixed << setprecision(2);
-    cout << "\nEstudiante: " << nombre << endl;
-    cout << "Promedio: " << promedio << endl;
+    // CORRECCION 4: Eliminar la redeclaracion de bonus dentro del bloque.
+    // Se opera directamente sobre la variable exterior.
+    double bonus = 20.0;
+    {
+        bonus += 10;    // modifica la variable exterior: 20.0 -> 30.0
+        cout << "Bonus aplicado: " << bonus << endl;
+    }
+    cout << "Bonus final del jugador: " << bonus << endl;  // imprime 30
 
-    // CORRECCION 4: Logica corregida: aprobado si promedio >= NOTA_MINIMA
-    if (promedio >= NOTA_MINIMA) {
-        cout << "Estado: APROBADO" << endl;
+    // CORRECCION 5: Cast explicito de size_t a int para que la comparacion
+    // sea entre dos tipos con signo y el comportamiento sea el esperado.
+    int intentos = 0;
+    intentos--;  // intentos = -1
+    if (intentos < static_cast<int>(jugador.size())) {
+        cout << "Acceso permitido para: " << jugador << endl;  // ahora se ejecuta correctamente
     } else {
-        cout << "Estado: REPROBADO" << endl;
+        cout << "Acceso denegado." << endl;
     }
-
-    // CORRECCION 5: El ciclo ahora va de 1 a MAX_NOTAS (sin el +1 extra)
-    cout << "\nNotas posibles del 1 al " << MAX_NOTAS << ":" << endl;
-    for (int j = 1; j <= MAX_NOTAS; j++) {
-        cout << "  Nota #" << j << endl;
-    }
-
-    // Conversion de promedio a entero para mostrar categoria
-    char categoria;
-    if (promedio >= 90.0)      categoria = 'A';
-    else if (promedio >= 80.0) categoria = 'B';
-    else if (promedio >= 70.0) categoria = 'C';
-    else if (promedio >= 61.0) categoria = 'D';
-    else                       categoria = 'F';
-
-    cout << "Categoria: " << categoria << endl;
 
     return 0;
 }
